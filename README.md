@@ -18,8 +18,8 @@ python -m pytest -q              # testes
 python -m http.server -d site    # abre o site em http://localhost:8000
 ```
 
-O GitHub Actions (`.github/workflows/site.yml`) roda os testes, faz a coleta todo dia às 7h30 de Brasília,
-salva as vagas no repositório e publica o site no GitHub Pages.
+`rotina.cmd` faz a coleta e envia as vagas ao GitHub (agendado no Windows todo dia às 7h30; roda no PC porque a
+micro1 bloqueia os servidores do GitHub). A cada push, o GitHub Actions roda os testes e publica o site no Pages.
 
 ## Links de indicação
 
