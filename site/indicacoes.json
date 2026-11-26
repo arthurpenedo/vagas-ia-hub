@@ -1,5 +1,5 @@
 {
-  "_leia": "Coloque o seu código de indicação em 'codigo'. Enquanto estiver vazio, o botão leva à vaga sem indicação. 'modelo' monta o link: {url} é a página da vaga, {sep} vira ? ou & e {codigo} é o seu código. Confira o formato com o link que a plataforma te dá.",
-  "mercor": { "codigo": "", "modelo": "{url}{sep}referralCode={codigo}" },
-  "micro1": { "codigo": "", "modelo": "{url}{sep}referralCode={codigo}" }
+  "_leia": "Código de indicação de cada plataforma. 'modelo' monta o link de cada vaga: {url} é a página da vaga, {sep} vira ? ou & e {codigo} é o código. As duas plataformas leem o parâmetro referralCode na página da vaga (conferido no código delas em 26/11/2026).",
+  "mercor": { "codigo": "3f117fb3-8000-a5cd-180c-b621bcf64c9d", "modelo": "{url}{sep}referralCode={codigo}&utm_source=referral&utm_medium=direct&utm_campaign=platform" },
+  "micro1": { "codigo": "ac973149-c523-4ba0-b73c-9e42abbe9502", "modelo": "{url}{sep}referralCode={codigo}&utm_source=referral&utm_medium=share&utm_campaign=job_referral" }
 }
