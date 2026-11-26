@@ -2,3 +2,5 @@ __pycache__/
 .pytest_cache/
 coletas-saida.log
 *.pyc
+.venv/
+modelos/

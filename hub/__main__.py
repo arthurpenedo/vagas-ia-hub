@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .classificar import abre_brasil, area_da_vaga, paises_da_vaga
 from .coleta import PLATAFORMAS, coletar, hoje
+from .traduzir import traduzir_vagas
 
 RAIZ = Path(__file__).resolve().parents[1]
 VAGAS = RAIZ / "site" / "vagas.json"
@@ -61,6 +62,7 @@ def main() -> None:
     c.add_argument("--max", type=int, default=400, help="máximo de vagas novas por plataforma")
     c.add_argument("--pausa", type=float, default=1.0, help="segundos entre requisições")
     sub.add_parser("reprocessar", help="recalcula área e países das vagas salvas, sem baixar nada")
+    sub.add_parser("traduzir", help="traduz para português as vagas que ainda não têm tradução")
     a = ap.parse_args()
 
     if a.cmd == "reprocessar":
@@ -73,12 +75,20 @@ def main() -> None:
         salvar(vagas)
         print(f"{len(vagas)} vagas reprocessadas")
 
+    if a.cmd == "traduzir":
+        vagas = ler()
+        n = traduzir_vagas(vagas)
+        salvar(vagas)
+        print(f"{n} textos traduzidos")
+
     if a.cmd == "coletar":
         antes = ler()
         vagas, r = coletar(antes, maximo_novas=a.max, pausa=a.pausa)
+        n = traduzir_vagas(vagas)
+        r["traduzidos"] = n
         salvar(vagas)
         linha = (f"{hoje()} {datetime.now():%H:%M} | total {len(vagas)} | novas {len(r['novas'])} | "
-                 f"removidas {len(r['removidas'])} | erros {r['erros']}")
+                 f"removidas {len(r['removidas'])} | traduzidos {r['traduzidos']} | erros {r['erros']}")
         print(linha)
         with LOG.open("a", encoding="utf-8") as f:
             f.write(linha + "\n")

@@ -102,3 +102,18 @@ def test_listagem_parcial_reconfere_em_vez_de_remover():
     vagas, r = coletar(atuais, [plat], baixar=lambda u: paginas[u], pausa=0, log=lambda *_: None)
     assert set(vagas) == {"parcial:aberta", "parcial:nova"}
     assert r["removidas"] == ["parcial:fechada"]
+
+
+def test_tradutor_usa_cache_e_corrige_para_portugues_do_brasil(tmp_path, monkeypatch):
+    import hub.traduzir as tr
+    monkeypatch.setattr(tr, "CACHE", tmp_path / "t.json")
+    monkeypatch.setattr(tr, "MODELO", tmp_path / "sem-modelo")
+    t = tr.Tradutor()
+    assert t.traduzir("Finance Expert") == "Finance Expert"     # sem modelo: fica o original
+    t.cache[tr._chave("Senior Engineer")] = "Engenheiro Sênior"
+    assert t.traduzir("Senior Engineer") == "Engenheiro Sênior"  # do cache, sem traduzir de novo
+    import re
+    texto = "O cliente está a construir o projecto da equipa"
+    for a, b in tr.CORRIGIR:
+        texto = re.sub(a, b, texto)
+    assert texto == "O cliente está construindo o projeto da equipe"
