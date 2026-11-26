@@ -1,7 +1,11 @@
 {
-  "_leia": "Código de indicação de cada plataforma. 'modelo' monta o link de cada vaga: {url} é a página da vaga, {sep} vira ? ou & e {codigo} é o código. Mercor e micro1 leem o parâmetro referralCode na página da vaga (conferido no código delas em 26/11/2026). Alignerr e Mindrift: código vazio até o Arthur mandar o link; o formato do modelo será ajustado ao link real.",
-  "mercor": { "codigo": "3f117fb3-8000-a5cd-180c-b621bcf64c9d", "modelo": "{url}{sep}referralCode={codigo}&utm_source=referral&utm_medium=direct&utm_campaign=platform" },
-  "micro1": { "codigo": "ac973149-c523-4ba0-b73c-9e42abbe9502", "modelo": "{url}{sep}referralCode={codigo}&utm_source=referral&utm_medium=share&utm_campaign=job_referral" },
-  "alignerr": { "codigo": "", "modelo": "{url}{sep}referralCode={codigo}" },
-  "mindrift": { "codigo": "", "modelo": "{url}{sep}referralCode={codigo}" }
+  "_leia": "Código de indicação de cada plataforma. 'modelo' monta o link de cada vaga: {url} é a página da vaga, {sep} vira ? ou & e {codigo} é o código. Mercor e micro1 leem o parâmetro referralCode na página da vaga (conferido no código delas em 26/11/2026).",
+  "mercor": {
+    "codigo": "3f117fb3-8000-a5cd-180c-b621bcf64c9d",
+    "modelo": "{url}{sep}referralCode={codigo}&utm_source=referral&utm_medium=direct&utm_campaign=platform"
+  },
+  "micro1": {
+    "codigo": "ac973149-c523-4ba0-b73c-9e42abbe9502",
+    "modelo": "{url}{sep}referralCode={codigo}&utm_source=referral&utm_medium=share&utm_campaign=job_referral"
+  }
 }

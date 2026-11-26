@@ -1,6 +1,6 @@
 # Trampo com IA
 
-Hub em português de vagas remotas para treinar e avaliar modelos de IA (Mercor, micro1, Alignerr, Mindrift), atualizado todo dia
+Hub em português de vagas remotas para treinar e avaliar modelos de IA (Mercor, micro1), atualizado todo dia
 por um coletor em Python. Feito para quem sente a IA mudando o próprio trabalho e quer ser pago para ensinar a IA.
 
 - **Site estático** (`site/`): filtros por área, plataforma, valor e "aceita o Brasil"; guias de seleção; sem backend.
@@ -18,7 +18,8 @@ python -m pytest -q              # testes
 python -m http.server -d site    # abre o site em http://localhost:8000
 ```
 
-`rotina.cmd` roda a coleta e faz um commit local; no Windows ele está agendado para rodar todo dia.
+O GitHub Actions (`.github/workflows/site.yml`) roda os testes, faz a coleta todo dia às 7h30 de Brasília,
+salva as vagas no repositório e publica o site no GitHub Pages.
 
 ## Links de indicação
 

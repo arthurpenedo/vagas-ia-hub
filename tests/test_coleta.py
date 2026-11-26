@@ -90,35 +90,15 @@ def test_sitemap_fora_do_ar_mantem_as_vagas():
     assert vagas == atuais and r["erros"] == 1
 
 
-def test_alignerr_lista_e_pagina_da_vaga():
-    from hub.coleta import extrair_alignerr, listar_alignerr
-    lista = (FIX / "alignerr-lista.html").read_text(encoding="utf-8")
-    urls = listar_alignerr(lambda u: lista)
-    assert len(urls) == 2 and all(u.startswith("https://www.alignerr.com/jobs/") for u in urls)
-    v = extrair_alignerr((FIX / "alignerr.html").read_text(encoding="utf-8"), "https://www.alignerr.com/jobs/x", "alignerr", "x")
-    assert v["titulo"].startswith("Customer Support")
-    assert (v["valorMin"], v["valorMax"], v["unidade"]) == (55, 75, "hora")
-    assert v["paises"] == ["Estados Unidos"] and v["brasil"] == "nao"
-    assert v["publicada"] == "2026-11-25"
-
-
-def test_mindrift_projeto():
-    from hub.coleta import extrair_mindrift
-    v = extrair_mindrift((FIX / "mindrift.html").read_text(encoding="utf-8"), "https://mindrift.ai/project/legal", "mindrift", "legal")
-    assert v["titulo"] == "Legal AI training projects"
-    assert v["valorMax"] == 75 and v["valorMin"] is None
-    assert v["area"] == "Direito" and v["brasil"] == "?"
-
-
 def test_listagem_parcial_reconfere_em_vez_de_remover():
     from hub.coleta import Plataforma
-    plat = Plataforma("alignerr", "Alignerr", listar=lambda b: ["https://a.com/jobs/nova"],
+    plat = Plataforma("parcial", "Parcial", listar=lambda b: ["https://a.com/jobs/nova"],
                       extrair=lambda pag, url, nome, id_: None if pag == "fechada" else
                       {"id": f"{nome}:{id_}", "plataforma": nome, "url": url, "expira": ""},
                       lista_completa=False)
     paginas = {"https://a.com/jobs/aberta": "ok", "https://a.com/jobs/fechada": "fechada", "https://a.com/jobs/nova": "ok"}
-    atuais = {f"alignerr:{k}": {"id": f"alignerr:{k}", "plataforma": "alignerr", "url": f"https://a.com/jobs/{k}",
+    atuais = {f"parcial:{k}": {"id": f"parcial:{k}", "plataforma": "parcial", "url": f"https://a.com/jobs/{k}",
                                 "expira": "", "conferidaEm": "2000-01-01"} for k in ("aberta", "fechada")}
     vagas, r = coletar(atuais, [plat], baixar=lambda u: paginas[u], pausa=0, log=lambda *_: None)
-    assert set(vagas) == {"alignerr:aberta", "alignerr:nova"}
-    assert r["removidas"] == ["alignerr:fechada"]
+    assert set(vagas) == {"parcial:aberta", "parcial:nova"}
+    assert r["removidas"] == ["parcial:fechada"]

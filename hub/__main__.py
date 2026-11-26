@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import re
 import json
 from datetime import datetime
 from pathlib import Path
@@ -22,8 +21,8 @@ def ler() -> dict[str, dict]:
 
 
 def marcar_duplicatas(lista: list[dict]) -> None:
-    """A Alignerr publica a mesma vaga para várias cidades. O site mostra uma só, com os países somados;
-    as cópias ficam no arquivo (marcadas com dup) para a coleta não achar que são novas."""
+    """Algumas plataformas publicam a mesma vaga várias vezes (uma por país ou cidade). O site mostra uma só,
+    com os países somados; as cópias ficam no arquivo (marcadas com dup) para a coleta não achar que são novas."""
     principal: dict[tuple, dict] = {}
     for v in lista:
         v.pop("dup", None)
@@ -32,8 +31,6 @@ def marcar_duplicatas(lista: list[dict]) -> None:
         v["brasil"] = abre_brasil(v["paises"])
     for v in lista:
         titulo = v["titulo"].strip().lower()
-        if v["plataforma"] == "alignerr":  # "Native Spanish Speaker ... (Dallas)": a cidade não muda a vaga
-            titulo = re.sub(r"\s*\([^)]*\)\s*$", "", titulo)
         chave = (v["plataforma"], titulo, v.get("valorMin"), v.get("valorMax"))
         if chave not in principal:
             principal[chave] = v

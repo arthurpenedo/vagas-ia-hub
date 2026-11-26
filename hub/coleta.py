@@ -159,60 +159,10 @@ def _next_data(pagina: str) -> dict:
     return json.loads(m.group(1)).get("props", {}).get("pageProps", {}) if m else {}
 
 
-# Alignerr: a página pública /jobs traz as 60 vagas mais recentes; a página de cada vaga traz os dados completos.
-ALIGNERR = "https://www.alignerr.com"
-
-
-def listar_alignerr(baixar) -> list[str]:
-    jobs = _next_data(baixar(ALIGNERR + "/en/jobs")).get("initialJobs", [])
-    return [ALIGNERR + j["applyUrl"] for j in jobs if str(j.get("applyUrl", "")).startswith("/jobs/")]
-
-
-def extrair_alignerr(pagina: str, url: str, nome: str, id_: str) -> dict | None:
-    j = _next_data(pagina).get("job")
-    if not j or not j.get("isActive", True):
-        return None
-    paises = paises_da_vaga([j["countryCode"]] if j.get("countryCode") else
-                            ([] if str(j.get("location", "")).lower() in ("", "remote") else [j["location"]]))
-    titulo = j.get("name", "").strip()
-    desc = j.get("htmlLongDescription") or j.get("shortDescription") or ""
-    corpo = texto_limpo(j.get("shortDescription") or desc)
-    return {
-        "id": f"{nome}:{id_}", "plataforma": nome, "titulo": titulo, "url": url,
-        "area": area_da_vaga(titulo, texto_limpo(desc, 600)),
-        "valorMin": j.get("lowerBoundHourlyRate"), "valorMax": j.get("upperBoundHourlyRate"),
-        "moeda": "USD" if j.get("lowerBoundHourlyRate") is not None else "",
-        "unidade": "hora" if j.get("salaryType", "HOURLY") == "HOURLY" else "",
-        "paises": paises, "brasil": abre_brasil(paises), "habilidades": [],
-        "resumo": corpo,
-        "publicada": str(j.get("firstPostDate") or j.get("createdAt") or "")[:10], "expira": "",
-    }
-
-
-# Mindrift: cada "projeto" é uma página com título, descrição e "Up to $X/hr" no meta description.
-def extrair_mindrift(pagina: str, url: str, nome: str, id_: str) -> dict | None:
-    titulo = re.split(r"\s[–—|-]\s", _meta(pagina, "og:title") or "", maxsplit=1)[0].strip()
-    desc = _meta(pagina, "description") or _meta(pagina, "og:description")
-    if not titulo:
-        return None
-    m = re.search(r"\$\s?(\d+(?:\.\d+)?)\s?(?:/|per\s)\s?(?:hr|hour)", desc + " " + pagina[:200000], re.I)
-    ate = float(m.group(1)) if m else None
-    return {
-        "id": f"{nome}:{id_}", "plataforma": nome, "titulo": titulo, "url": url,
-        "area": area_da_vaga(titulo, desc), "valorMin": None, "valorMax": ate,
-        "moeda": "USD" if ate else "", "unidade": "hora" if ate else "",
-        "paises": [], "brasil": "?", "habilidades": [], "resumo": desc,
-        "publicada": "", "expira": "",
-    }
-
-
 PLATAFORMAS = [
     Plataforma("mercor", "Mercor", "https://work.mercor.com/sitemap.xml", r"/jobs/list_[A-Za-z0-9_-]+",
                lambda u: re.search(r"(list_[A-Za-z0-9_-]+)", u).group(1)),
     Plataforma("micro1", "micro1", "https://jobs.micro1.ai/sitemap.xml", r"/post/[0-9a-f-]{36}$"),
-    Plataforma("alignerr", "Alignerr", listar=listar_alignerr, extrair=extrair_alignerr, lista_completa=False),
-    Plataforma("mindrift", "Mindrift", "https://mindrift.ai/sitemap.xml", r"/project/[a-z0-9-]+$",
-               extrair=extrair_mindrift),
 ]
 
 

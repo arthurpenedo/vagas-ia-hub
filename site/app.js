@@ -1,7 +1,7 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 const POR_PAGINA = 30;
-const GUIAS = { mercor: "guias/mercor.html", micro1: "guias/micro1.html", alignerr: "guias/alignerr.html", mindrift: "guias/mindrift.html" };
+const GUIAS = { mercor: "guias/mercor.html", micro1: "guias/micro1.html" };
 const estado = { vagas: [], plataformas: {}, indic: {}, area: "", pagina: 1 };
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
