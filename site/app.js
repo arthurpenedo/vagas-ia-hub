@@ -68,11 +68,11 @@ function cartao(v) {
 const destaque = (v) => (v.brasil === "sim" ? 2 : 0) + (porHora(v) > 0 ? 1 : 0);
 
 function vitrine() {
-  // três vagas por hora, abertas ao Brasil, de áreas diferentes, das mais bem pagas
-  const top = estado.vagas.filter((v) => v.brasil === "sim" && v.unidade === "hora" && porHora(v) > 0)
-    .sort((a, b) => porHora(b) - porHora(a));
+  // três vagas por hora, de áreas diferentes, das mais bem pagas; as que aceitam o Brasil vêm primeiro
+  const porValor = estado.vagas.filter((v) => v.unidade === "hora" && porHora(v) > 0)
+    .sort((a, b) => (b.brasil === "sim") - (a.brasil === "sim") || porHora(b) - porHora(a));
   const escolha = [], areas = new Set(), titulos = new Set();
-  for (const v of top) {
+  for (const v of porValor) {
     if (areas.has(v.area) || titulos.has(v.titulo)) continue;
     escolha.push(v); areas.add(v.area); titulos.add(v.titulo);
     if (escolha.length === 3) break;
