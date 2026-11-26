@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import json
 from datetime import datetime
 from pathlib import Path
@@ -20,8 +21,34 @@ def ler() -> dict[str, dict]:
     return {v["id"]: v for v in json.loads(VAGAS.read_text(encoding="utf-8"))["vagas"]}
 
 
+def marcar_duplicatas(lista: list[dict]) -> None:
+    """A Alignerr publica a mesma vaga para várias cidades. O site mostra uma só, com os países somados;
+    as cópias ficam no arquivo (marcadas com dup) para a coleta não achar que são novas."""
+    principal: dict[tuple, dict] = {}
+    for v in lista:
+        v.pop("dup", None)
+        v["paises"] = list(v.get("paisesProprios", v["paises"]))  # desfaz a soma da rodada anterior
+        v["paisesProprios"] = list(v["paises"])
+        v["brasil"] = abre_brasil(v["paises"])
+    for v in lista:
+        titulo = v["titulo"].strip().lower()
+        if v["plataforma"] == "alignerr":  # "Native Spanish Speaker ... (Dallas)": a cidade não muda a vaga
+            titulo = re.sub(r"\s*\([^)]*\)\s*$", "", titulo)
+        chave = (v["plataforma"], titulo, v.get("valorMin"), v.get("valorMax"))
+        if chave not in principal:
+            principal[chave] = v
+            continue
+        p = principal[chave]
+        v["dup"] = True
+        for pais in v["paises"]:
+            if pais not in p["paises"]:
+                p["paises"].append(pais)
+        p["brasil"] = abre_brasil(p["paises"])
+
+
 def salvar(vagas: dict[str, dict]) -> None:
     lista = sorted(vagas.values(), key=lambda v: (v.get("publicada") or "", v["id"]), reverse=True)
+    marcar_duplicatas(lista)
     dados = {
         "atualizado": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "plataformas": {p.nome: p.rotulo for p in PLATAFORMAS},
@@ -42,7 +69,8 @@ def main() -> None:
     if a.cmd == "reprocessar":
         vagas = ler()
         for v in vagas.values():
-            v["paises"] = paises_da_vaga(v["paises"])
+            v["paises"] = paises_da_vaga(v.get("paisesProprios", v["paises"]))
+            v["paisesProprios"] = v["paises"]
             v["brasil"] = abre_brasil(v["paises"])
             v["area"] = area_da_vaga(v["titulo"], " ".join(v["habilidades"]) + " " + v["resumo"])
         salvar(vagas)

@@ -130,16 +130,89 @@ def normalizar(jp: dict, url: str, plataforma: str, id_: str) -> dict:
 class Plataforma:
     nome: str
     rotulo: str
-    sitemap: str
-    padrao: str                      # regex que separa as URLs de vaga no sitemap
-    id_da_url: Callable[[str], str]
+    sitemap: str = ""
+    padrao: str = ""                 # regex que separa as URLs de vaga no sitemap
+    id_da_url: Callable[[str], str] = lambda u: u.rstrip("/").rsplit("/", 1)[1]
+    listar: Callable | None = None   # (baixar) -> URLs de vaga, quando não há sitemap de vagas
+    extrair: Callable | None = None  # (pagina, url, nome, id) -> vaga normalizada ou None
+    lista_completa: bool = True      # False: a listagem mostra só as mais recentes, então sumir dela não fecha a vaga
+
+    def urls(self, baixar) -> list[str]:
+        if self.listar:
+            return self.listar(baixar)
+        return urls_do_sitemap(baixar(self.sitemap), self.padrao)
+
+    def vaga(self, pagina: str, url: str, id_: str) -> dict | None:
+        if self.extrair:
+            return self.extrair(pagina, url, self.nome, id_)
+        jp = job_posting(pagina)
+        return normalizar(jp, url, self.nome, id_) if jp else None
+
+
+def _meta(pagina: str, nome: str) -> str:
+    m = re.search(r'<meta[^>]+(?:name|property)="' + re.escape(nome) + r'"[^>]+content="([^"]*)"', pagina)
+    return html.unescape(m.group(1)).strip() if m else ""
+
+
+def _next_data(pagina: str) -> dict:
+    m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', pagina, re.S)
+    return json.loads(m.group(1)).get("props", {}).get("pageProps", {}) if m else {}
+
+
+# Alignerr: a página pública /jobs traz as 60 vagas mais recentes; a página de cada vaga traz os dados completos.
+ALIGNERR = "https://www.alignerr.com"
+
+
+def listar_alignerr(baixar) -> list[str]:
+    jobs = _next_data(baixar(ALIGNERR + "/en/jobs")).get("initialJobs", [])
+    return [ALIGNERR + j["applyUrl"] for j in jobs if str(j.get("applyUrl", "")).startswith("/jobs/")]
+
+
+def extrair_alignerr(pagina: str, url: str, nome: str, id_: str) -> dict | None:
+    j = _next_data(pagina).get("job")
+    if not j or not j.get("isActive", True):
+        return None
+    paises = paises_da_vaga([j["countryCode"]] if j.get("countryCode") else
+                            ([] if str(j.get("location", "")).lower() in ("", "remote") else [j["location"]]))
+    titulo = j.get("name", "").strip()
+    desc = j.get("htmlLongDescription") or j.get("shortDescription") or ""
+    corpo = texto_limpo(j.get("shortDescription") or desc)
+    return {
+        "id": f"{nome}:{id_}", "plataforma": nome, "titulo": titulo, "url": url,
+        "area": area_da_vaga(titulo, texto_limpo(desc, 600)),
+        "valorMin": j.get("lowerBoundHourlyRate"), "valorMax": j.get("upperBoundHourlyRate"),
+        "moeda": "USD" if j.get("lowerBoundHourlyRate") is not None else "",
+        "unidade": "hora" if j.get("salaryType", "HOURLY") == "HOURLY" else "",
+        "paises": paises, "brasil": abre_brasil(paises), "habilidades": [],
+        "resumo": corpo,
+        "publicada": str(j.get("firstPostDate") or j.get("createdAt") or "")[:10], "expira": "",
+    }
+
+
+# Mindrift: cada "projeto" é uma página com título, descrição e "Up to $X/hr" no meta description.
+def extrair_mindrift(pagina: str, url: str, nome: str, id_: str) -> dict | None:
+    titulo = re.split(r"\s[–—|-]\s", _meta(pagina, "og:title") or "", maxsplit=1)[0].strip()
+    desc = _meta(pagina, "description") or _meta(pagina, "og:description")
+    if not titulo:
+        return None
+    m = re.search(r"\$\s?(\d+(?:\.\d+)?)\s?(?:/|per\s)\s?(?:hr|hour)", desc + " " + pagina[:200000], re.I)
+    ate = float(m.group(1)) if m else None
+    return {
+        "id": f"{nome}:{id_}", "plataforma": nome, "titulo": titulo, "url": url,
+        "area": area_da_vaga(titulo, desc), "valorMin": None, "valorMax": ate,
+        "moeda": "USD" if ate else "", "unidade": "hora" if ate else "",
+        "paises": [], "brasil": "?", "habilidades": [], "resumo": desc,
+        "publicada": "", "expira": "",
+    }
 
 
 PLATAFORMAS = [
     Plataforma("mercor", "Mercor", "https://work.mercor.com/sitemap.xml", r"/jobs/list_[A-Za-z0-9_-]+",
                lambda u: re.search(r"(list_[A-Za-z0-9_-]+)", u).group(1)),
-    Plataforma("micro1", "micro1", "https://jobs.micro1.ai/sitemap.xml", r"/post/[0-9a-f-]{36}$",
-               lambda u: u.rstrip("/").rsplit("/", 1)[1]),
+    Plataforma("micro1", "micro1", "https://jobs.micro1.ai/sitemap.xml", r"/post/[0-9a-f-]{36}$"),
+    Plataforma("alignerr", "Alignerr", listar=listar_alignerr, extrair=extrair_alignerr, lista_completa=False),
+    Plataforma("mindrift", "Mindrift", "https://mindrift.ai/sitemap.xml", r"/project/[a-z0-9-]+$",
+               extrair=extrair_mindrift),
 ]
 
 
@@ -147,40 +220,66 @@ def hoje() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
+def _baixar_vaga(p: Plataforma, u: str, vid: str, baixar, pausa: float):
+    """Devolve a vaga, None se a página não traz vaga ativa, ou levanta erro de rede."""
+    try:
+        return p.vaga(baixar(u), u, vid.split(":", 1)[1])
+    finally:
+        time.sleep(pausa)
+
+
 def coletar(atuais: dict[str, dict], plataformas=PLATAFORMAS, baixar=baixar, pausa: float = 1.0,
-            maximo_novas: int = 400, log=print) -> tuple[dict[str, dict], dict]:
+            maximo_novas: int = 400, reconferir: int = 30, log=print) -> tuple[dict[str, dict], dict]:
     """Atualiza o dicionário {id: vaga}. Devolve (vagas, resumo da rodada)."""
     vagas = dict(atuais)
     resumo = {"novas": [], "removidas": [], "erros": 0}
     d = hoje()
+
+    def remover(vid):
+        resumo["removidas"].append(vid)
+        del vagas[vid]
+
     for p in plataformas:
         try:
-            urls = urls_do_sitemap(baixar(p.sitemap), p.padrao)
+            urls = p.urls(baixar)
         except Exception as e:  # plataforma fora do ar: mantém o que já temos
-            log(f"[{p.nome}] sitemap falhou: {e}")
+            log(f"[{p.nome}] listagem falhou: {e}")
             resumo["erros"] += 1
             continue
         ids_vivos = {f"{p.nome}:{p.id_da_url(u)}": u for u in urls}
-        for vid in [k for k, v in vagas.items() if v["plataforma"] == p.nome and k not in ids_vivos]:
-            resumo["removidas"].append(vid)
-            del vagas[vid]
+        if p.lista_completa:
+            for vid in [k for k, v in vagas.items() if v["plataforma"] == p.nome and k not in ids_vivos]:
+                remover(vid)
+        else:
+            # a listagem só mostra as mais recentes: reconfere na página as que sumiram dela, as mais antigas primeiro
+            fora = sorted((v.get("conferidaEm", ""), k) for k, v in vagas.items()
+                          if v["plataforma"] == p.nome and k not in ids_vivos and v.get("conferidaEm", "") < d)
+            for _, vid in fora[:reconferir]:
+                try:
+                    v = _baixar_vaga(p, vagas[vid]["url"], vid, baixar, pausa)
+                except Exception as e:
+                    if "404" in str(e) or "410" in str(e):
+                        remover(vid)
+                    else:
+                        resumo["erros"] += 1
+                    continue
+                if v is None:
+                    remover(vid)
+                else:
+                    vagas[vid]["conferidaEm"] = d
         novas = [(vid, u) for vid, u in ids_vivos.items() if vid not in vagas][:maximo_novas]
-        log(f"[{p.nome}] {len(urls)} no sitemap, {len(novas)} novas")
+        log(f"[{p.nome}] {len(urls)} listadas, {len(novas)} novas")
         for vid, u in novas:
             try:
-                jp = job_posting(baixar(u))
+                v = _baixar_vaga(p, u, vid, baixar, pausa)
             except Exception:
                 resumo["erros"] += 1
                 continue
-            finally:
-                time.sleep(pausa)
-            if not jp:
+            if not v:
                 continue
-            v = normalizar(jp, u, p.nome, vid.split(":", 1)[1])
-            v["vistaEm"] = d
+            v["vistaEm"] = v["conferidaEm"] = d
             vagas[vid] = v
             resumo["novas"].append(vid)
     for vid in [k for k, v in vagas.items() if v.get("expira") and v["expira"] < d]:
-        resumo["removidas"].append(vid)
-        del vagas[vid]
+        remover(vid)
     return vagas, resumo

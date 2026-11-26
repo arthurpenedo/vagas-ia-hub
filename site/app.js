@@ -1,7 +1,7 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 const POR_PAGINA = 30;
-const GUIAS = { mercor: "guias/mercor.html", micro1: "guias/micro1.html" };
+const GUIAS = { mercor: "guias/mercor.html", micro1: "guias/micro1.html", alignerr: "guias/alignerr.html", mindrift: "guias/mindrift.html" };
 const estado = { vagas: [], plataformas: {}, indic: {}, area: "", pagina: 1 };
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -20,11 +20,12 @@ const HORAS = { hora: 1, dia: 8, semana: 40, "mês": 173, ano: 2080 };
 const porHora = (v) => (v.valorMax ?? v.valorMin) == null || !HORAS[v.unidade] ? -1 : (v.valorMax ?? v.valorMin) / HORAS[v.unidade];
 
 function valorTxt(v) {
-  if (v.valorMin == null) return "";
+  if (v.valorMin == null && v.valorMax == null) return "";
   const moeda = v.moeda === "USD" ? "US$ " : (v.moeda ? v.moeda + " " : "");
   const n = (x) => Number(x).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
-  const faixa = v.valorMax && v.valorMax !== v.valorMin ? `${n(v.valorMin)}–${n(v.valorMax)}` : n(v.valorMin);
-  return `${moeda}${faixa}${v.unidade ? "/" + (v.unidade === "hora" ? "h" : v.unidade) : ""}`;
+  const faixa = v.valorMin == null ? n(v.valorMax)
+    : v.valorMax && v.valorMax !== v.valorMin ? `${n(v.valorMin)}–${n(v.valorMax)}` : n(v.valorMin);
+  return `${v.valorMin == null ? "até " : ""}${moeda}${faixa}${v.unidade ? "/" + (v.unidade === "hora" ? "h" : v.unidade) : ""}`;
 }
 
 function quando(d) {
@@ -110,7 +111,7 @@ async function iniciar() {
       fetch("vagas.json", { cache: "no-cache" }).then((r) => r.json()),
       fetch("indicacoes.json", { cache: "no-cache" }).then((r) => r.json()).catch(() => ({})),
     ]);
-    estado.vagas = dados.vagas || [];
+    estado.vagas = (dados.vagas || []).filter((v) => !v.dup);
     estado.plataformas = dados.plataformas || {};
     estado.indic = indic;
     for (const [k, rot] of Object.entries(estado.plataformas)) $("plataforma").insertAdjacentHTML("beforeend", `<option value="${esc(k)}">${esc(rot)}</option>`);
