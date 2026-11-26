@@ -1,0 +1,13 @@
+[project]
+name = "vagas-ia-hub"
+version = "0.1.0"
+description = "Hub em português de vagas remotas de treinamento de IA, atualizado todo dia."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

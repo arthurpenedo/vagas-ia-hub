@@ -1,0 +1,5 @@
+{
+  "_leia": "Coloque o seu código de indicação em 'codigo'. Enquanto estiver vazio, o botão leva à vaga sem indicação. 'modelo' monta o link: {url} é a página da vaga, {sep} vira ? ou & e {codigo} é o seu código. Confira o formato com o link que a plataforma te dá.",
+  "mercor": { "codigo": "", "modelo": "{url}{sep}referralCode={codigo}" },
+  "micro1": { "codigo": "", "modelo": "{url}{sep}referralCode={codigo}" }
+}
