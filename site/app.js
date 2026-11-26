@@ -48,22 +48,36 @@ function seloPais(v) {
 
 function cartao(v) {
   const val = valorTxt(v);
+  const rot = estado.plataformas[v.plataforma] || v.plataforma;
+  const unid = v.unidade === "hora" ? "por hora" : "anunciado";
   return `<article class="vaga">
-    <div>
-      <h3>${esc(v.titulo)}</h3>
-      <div class="meta">
-        <span class="selo">${esc(estado.plataformas[v.plataforma] || v.plataforma)}</span>
-        <span>${esc(v.area)}</span>${seloPais(v)}
-        ${v.publicada ? `<span>${quando(v.publicada)}</span>` : ""}
-      </div>
-    </div>
-    <div class="valor">${val ? esc(val) + `<small>${v.unidade === "hora" ? "por hora trabalhada" : "valor anunciado"}</small>` : "<small>valor na página da vaga</small>"}</div>
+    <div class="vaga-topo"><span class="plat ${esc(v.plataforma)}">${esc(rot)}</span>${v.publicada ? `<span>${quando(v.publicada)}</span>` : ""}</div>
+    <h3>${esc(v.titulo)}</h3>
+    ${val ? `<div class="valor">${esc(val)}<small>${unid}</small></div>` : `<div class="valor sem">Valor na página da vaga</div>`}
+    <div class="meta"><span class="selo">${esc(v.area)}</span>${seloPais(v)}</div>
     ${v.resumo ? `<p class="resumo">${esc(v.resumo)}</p>` : ""}
     <div class="acoes">
-      <a class="botao" href="${esc(seguro(linkIndicacao(v)))}" target="_blank" rel="noopener sponsored">Ver vaga e candidatar</a>
-      ${GUIAS[v.plataforma] ? `<a class="link-guia" href="${GUIAS[v.plataforma]}">Como passar na seleção da ${esc(estado.plataformas[v.plataforma])}</a>` : ""}
+      <a class="botao" href="${esc(seguro(linkIndicacao(v)))}" target="_blank" rel="noopener sponsored">Candidatar
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+      ${GUIAS[v.plataforma] ? `<a class="link-guia" href="${GUIAS[v.plataforma]}">Guia da ${esc(rot)}</a>` : ""}
     </div>
   </article>`;
+}
+
+// Em destaque: aceita o Brasil e mostra o valor vem primeiro; depois, as mais recentes.
+const destaque = (v) => (v.brasil === "sim" ? 2 : 0) + (porHora(v) > 0 ? 1 : 0);
+
+function vitrine() {
+  // três vagas por hora, abertas ao Brasil, de áreas diferentes, das mais bem pagas
+  const top = estado.vagas.filter((v) => v.brasil === "sim" && v.unidade === "hora" && porHora(v) > 0)
+    .sort((a, b) => porHora(b) - porHora(a));
+  const escolha = [], areas = new Set(), titulos = new Set();
+  for (const v of top) {
+    if (areas.has(v.area) || titulos.has(v.titulo)) continue;
+    escolha.push(v); areas.add(v.area); titulos.add(v.titulo);
+    if (escolha.length === 3) break;
+  }
+  $("vitrine").innerHTML = escolha.map(cartao).join("");
 }
 
 function filtradas() {
@@ -75,7 +89,9 @@ function filtradas() {
     (!plat || v.plataforma === plat) &&
     (!soBr || v.brasil !== "nao") &&
     (!q || (v.titulo + " " + v.resumo + " " + v.habilidades.join(" ") + " " + v.area).toLowerCase().includes(q)));
-  if ($("ordem").value === "valor") l = l.slice().sort((a, b) => porHora(b) - porHora(a));
+  const ordem = $("ordem").value;
+  if (ordem === "valor") l = l.slice().sort((a, b) => porHora(b) - porHora(a));
+  if (ordem === "destaque") l = l.slice().sort((a, b) => destaque(b) - destaque(a) || (b.publicada || "").localeCompare(a.publicada || ""));
   return l;
 }
 
@@ -83,9 +99,8 @@ function desenhar() {
   const l = filtradas();
   const mostrar = l.slice(0, estado.pagina * POR_PAGINA);
   $("lista").innerHTML = mostrar.map(cartao).join("");
-  $("resultado").textContent = l.length
-    ? `${l.length} ${l.length === 1 ? "vaga" : "vagas"}`
-    : "Nenhuma vaga com esses filtros. Tente tirar algum.";
+  $("resultado").textContent = l.length ? `${l.length.toLocaleString("pt-BR")} ${l.length === 1 ? "vaga" : "vagas"}` : "";
+  if (!l.length) $("lista").innerHTML = `<div class="vazio vidro">Nenhuma vaga com esses filtros. Tente tirar algum ou buscar outra palavra.</div>`;
   $("mais").hidden = mostrar.length >= l.length;
 }
 
@@ -103,6 +118,11 @@ function numeros() {
   $("n-total").textContent = estado.vagas.length.toLocaleString("pt-BR");
   $("n-br").textContent = br.toLocaleString("pt-BR");
   $("n-mediana").textContent = hora.length ? `US$ ${Math.round(hora[Math.floor(hora.length / 2)])}` : "–";
+  $("h-total").textContent = estado.vagas.length.toLocaleString("pt-BR");
+  const areas = [...new Set(estado.vagas.map((v) => v.area))].filter((a) => a !== "Outras áreas");
+  const itens = areas.map((a) => `<span>${esc(a)}</span>`).join("");
+  const metade = itens + itens + itens;
+  $("faixa").innerHTML = metade + metade;  // a animação anda meia faixa: as duas metades iguais escondem a emenda
 }
 
 async function iniciar() {
@@ -115,12 +135,14 @@ async function iniciar() {
     estado.plataformas = dados.plataformas || {};
     estado.indic = indic;
     for (const [k, rot] of Object.entries(estado.plataformas)) $("plataforma").insertAdjacentHTML("beforeend", `<option value="${esc(k)}">${esc(rot)}</option>`);
-    $("atualizado").textContent = dados.atualizado ? `Vagas atualizadas em ${dados.atualizado.split(" ")[0].split("-").reverse().join("/")}.` : "";
+    const dia = dados.atualizado ? dados.atualizado.split(" ")[0].split("-").reverse().join("/") : "";
+    $("atualizado").textContent = dia ? `Vagas atualizadas em ${dia}.` : "";
+    if (dia) $("h-data").textContent = dia === new Date().toLocaleDateString("pt-BR") ? "hoje" : `em ${dia.slice(0, 5)}`;
     const u = new URLSearchParams(location.search);
     if (u.get("q")) $("busca").value = u.get("q");
     if (u.get("area")) estado.area = u.get("area");
     if (u.get("plataforma")) $("plataforma").value = u.get("plataforma");
-    numeros(); chips(); desenhar();
+    numeros(); chips(); vitrine(); desenhar();
   } catch (e) {
     $("resultado").textContent = "Não consegui carregar as vagas agora. Tente recarregar a página.";
   }
