@@ -12,9 +12,9 @@ import json
 import re
 import time
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Callable
 
 from .classificar import abre_brasil, area_da_vaga, paises_da_vaga
 
@@ -43,7 +43,7 @@ def urls_do_sitemap(xml: str, padrao: str) -> list[str]:
 def _jsonld_scripts(pagina: str) -> list[dict]:
     """Blocos <script type="application/ld+json"> comuns (Mercor)."""
     out = []
-    for bloco in re.findall(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', pagina, re.S):
+    for bloco in re.findall(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', pagina, re.DOTALL):
         try:
             out.append(json.loads(bloco))
         except json.JSONDecodeError:
@@ -155,7 +155,7 @@ def _meta(pagina: str, nome: str) -> str:
 
 
 def _next_data(pagina: str) -> dict:
-    m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', pagina, re.S)
+    m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', pagina, re.DOTALL)
     return json.loads(m.group(1)).get("props", {}).get("pageProps", {}) if m else {}
 
 
