@@ -4,3 +4,7 @@ coletas-saida.log
 *.pyc
 .venv/
 modelos/
+site/vaga/
+site/sitemap.xml
+site/robots.txt
+dados/newsletter.local.json

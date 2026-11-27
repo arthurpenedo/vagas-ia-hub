@@ -1,0 +1,4 @@
+{
+  "_leia": "Endereço do Google Apps Script que recebe as inscrições (ver apps-script/LEIA.md). Vazio = caixa de inscrição escondida.",
+  "endpoint": ""
+}

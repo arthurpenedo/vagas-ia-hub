@@ -8,7 +8,8 @@ set PY=python
 if exist ".venv\Scripts\python.exe" set PY=.venv\Scripts\python.exe
 git pull -q --rebase >> coletas-saida.log 2>&1
 %PY% -m hub coletar >> coletas-saida.log 2>&1
-git add site/vagas.json coletas.log dados/traducoes.json >nul 2>&1
+%PY% -m hub newsletter >> coletas-saida.log 2>&1
+git add site/vagas.json coletas.log dados/traducoes.json dados/newsletter-estado.json >nul 2>&1
 git commit -q -m "vagas: coleta automatica %date%" >nul 2>&1
 git push -q >> coletas-saida.log 2>&1
 exit /b 0

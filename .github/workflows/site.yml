@@ -30,10 +30,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: paginas de cada vaga, sitemap e robots
+        run: python -m hub paginas
       - name: versao nos arquivos (o navegador nao mistura CSS/JS antigo com HTML novo)
         run: |
           v=$(echo "$GITHUB_SHA" | cut -c1-8)
-          find site -name '*.html' -exec sed -i -E "s/(estilo\.css|app\.js)\"/\1?v=$v\"/g" {} +
+          find site -name '*.html' -exec sed -i -E "s/(estilo\.css|app\.js|newsletter\.js)\"/\1?v=$v\"/g" {} +
           grep -rho 'estilo\.css?v=[a-z0-9]*' site | sort -u
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

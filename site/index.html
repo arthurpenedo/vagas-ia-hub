@@ -18,6 +18,7 @@
     <a href="#como">Como funciona</a>
     <a href="guias/">Guias</a>
     <a href="como-funciona.html">Sobre</a>
+    <a href="#novidades">Receber vagas</a>
     <a class="cta" href="#vagas">Ver vagas</a>
   </nav>
 </div></header>
@@ -86,6 +87,18 @@
       <p class="resultado" id="resultado" aria-live="polite">Carregando vagas…</p>
       <div class="lista" id="lista"></div>
       <button class="mais botao-vidro" id="mais" hidden>Mostrar mais vagas</button>
+      <section class="news vidro" id="novidades" hidden>
+        <div class="news-texto"><h2>Receba as vagas novas no seu e-mail</h2>
+          <p>Um e-mail por dia, só quando aparecem vagas novas que aceitam o Brasil. Sai quando quiser, com um clique.</p></div>
+        <form class="news-form" data-origem="home" novalidate>
+          <div class="news-linha"><input type="email" name="email" placeholder="seu@email.com" autocomplete="email" required aria-label="Seu e-mail">
+            <button class="botao" type="submit">Quero receber</button></div>
+          <input class="news-isca" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <details class="news-areas"><summary>Só de algumas áreas? (opcional)</summary><div class="news-chips"></div></details>
+          <label class="news-ok"><input type="checkbox" name="consentimento" value="sim" required> Aceito receber vagas por e-mail e li a <a href="privacidade.html">política de privacidade</a>.</label>
+          <p class="news-msg" role="status" aria-live="polite"></p>
+        </form>
+      </section>
     </div>
   </section>
 </main>
@@ -94,10 +107,11 @@
   <p><b>Somos um guia independente.</b> Não somos a Mercor, a micro1 nem outra plataforma, e não contratamos ninguém:
      a candidatura, a seleção e o pagamento acontecem no site de cada empresa.</p>
   <p>Alguns links são de indicação. Você não paga nada e não perde nada; se você for aprovado e trabalhar,
-     a plataforma me paga um bônus, e é isso que mantém o site no ar. <a href="como-funciona.html">Saiba mais</a>.</p>
+     a plataforma me paga um bônus, e é isso que mantém o site no ar. <a href="como-funciona.html">Saiba mais</a> · <a href="privacidade.html">Privacidade</a>.</p>
   <p id="atualizado"></p>
 </div></footer>
 
 <script src="app.js"></script>
+<script src="newsletter.js"></script>
 </body>
 </html>

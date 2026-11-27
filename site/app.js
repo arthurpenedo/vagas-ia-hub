@@ -52,7 +52,7 @@ function cartao(v) {
   const unid = v.unidade === "hora" ? "por hora" : "anunciado";
   return `<article class="vaga">
     <div class="vaga-topo"><span class="plat ${esc(v.plataforma)}">${esc(rot)}</span>${v.publicada ? `<span>${quando(v.publicada)}</span>` : ""}</div>
-    <h3>${esc(v.tituloPt || v.titulo)}</h3>
+    <h3>${v.pagina ? `<a href="vaga/${esc(v.pagina)}.html">${esc(v.tituloPt || v.titulo)}</a>` : esc(v.tituloPt || v.titulo)}</h3>
     ${v.tituloPt && v.tituloPt !== v.titulo ? `<p class="original">Título original: <i>${esc(v.titulo)}</i></p>` : ""}
     ${val ? `<div class="valor">${esc(val)}<small>${unid}</small></div>` : `<div class="valor sem">Valor na página da vaga</div>`}
     <div class="meta"><span class="selo">${esc(v.area)}</span>${seloPais(v)}</div>
@@ -60,6 +60,7 @@ function cartao(v) {
     <div class="acoes">
       <a class="botao" href="${esc(seguro(linkIndicacao(v)))}" target="_blank" rel="noopener sponsored">Candidatar
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+      ${v.pagina ? `<a class="link-guia" href="vaga/${esc(v.pagina)}.html">Detalhes</a>` : ""}
       ${GUIAS[v.plataforma] ? `<a class="link-guia" href="${GUIAS[v.plataforma]}">Guia da ${esc(rot)}</a>` : ""}
     </div>
   </article>`;

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .classificar import abre_brasil, area_da_vaga, paises_da_vaga
 from .coleta import PLATAFORMAS, coletar, hoje
+from .paginas import slug
 from .traduzir import traduzir_vagas
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -47,6 +48,8 @@ def marcar_duplicatas(lista: list[dict]) -> None:
 def salvar(vagas: dict[str, dict]) -> None:
     lista = sorted(vagas.values(), key=lambda v: (v.get("publicada") or "", v["id"]), reverse=True)
     marcar_duplicatas(lista)
+    for v in lista:
+        v["pagina"] = slug(v)
     dados = {
         "atualizado": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "plataformas": {p.nome: p.rotulo for p in PLATAFORMAS},
@@ -63,6 +66,10 @@ def main(argv: list[str] | None = None) -> None:
     c.add_argument("--pausa", type=float, default=1.0, help="segundos entre requisições")
     sub.add_parser("reprocessar", help="recalcula área e países das vagas salvas, sem baixar nada")
     sub.add_parser("traduzir", help="traduz para português as vagas que ainda não têm tradução")
+    sub.add_parser("paginas", help="gera a página de cada vaga, o sitemap e o robots.txt (roda na publicação)")
+    n = sub.add_parser("newsletter", help="manda as vagas novas para quem confirmou a inscrição")
+    n.add_argument("--simular", action="store_true", help="mostra o que seria enviado, sem mandar nada")
+    n.add_argument("--teste", metavar="EMAIL", help="manda o e-mail de hoje só para este endereço")
     a = ap.parse_args(argv)
     if a.cmd == "coletar" and (a.max < 0 or a.pausa < 0):
         ap.error("--max e --pausa não podem ser negativos")
@@ -82,6 +89,14 @@ def main(argv: list[str] | None = None) -> None:
         n = traduzir_vagas(vagas)
         salvar(vagas)
         print(f"{n} textos traduzidos")
+
+    if a.cmd == "paginas":
+        from .paginas import gerar
+        print(f"{gerar()} páginas de vaga geradas")
+
+    if a.cmd == "newsletter":
+        from .newsletter import rodar
+        print(rodar(simular=a.simular, teste=a.teste))
 
     if a.cmd == "coletar":
         antes = ler()
