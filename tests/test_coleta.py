@@ -1,7 +1,14 @@
 from pathlib import Path
 
 from hub.classificar import abre_brasil, area_da_vaga, paises_da_vaga
-from hub.coleta import Plataforma, coletar, job_posting, normalizar, texto_limpo, urls_do_sitemap
+from hub.coleta import (
+    Plataforma,
+    coletar,
+    job_posting,
+    normalizar,
+    texto_limpo,
+    urls_do_sitemap,
+)
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -117,3 +124,15 @@ def test_tradutor_usa_cache_e_corrige_para_portugues_do_brasil(tmp_path, monkeyp
     for a, b in tr.CORRIGIR:
         texto = re.sub(a, b, texto)
     assert texto == "O cliente está construindo o projeto da equipe"
+
+
+def test_cli_coletar_recusa_max_ou_pausa_negativos(capsys):
+    import pytest
+
+    from hub.__main__ import main
+
+    for opcao in (["--max", "-5"], ["--pausa", "-1"]):
+        with pytest.raises(SystemExit) as saida:
+            main(["coletar", *opcao])
+        assert saida.value.code == 2
+        assert "não podem ser negativos" in capsys.readouterr().err

@@ -55,7 +55,7 @@ def salvar(vagas: dict[str, dict]) -> None:
     VAGAS.write_text(json.dumps(dados, ensure_ascii=False, indent=0), encoding="utf-8")
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(prog="hub")
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("coletar", help="busca vagas novas e retira as encerradas")
@@ -63,7 +63,9 @@ def main() -> None:
     c.add_argument("--pausa", type=float, default=1.0, help="segundos entre requisições")
     sub.add_parser("reprocessar", help="recalcula área e países das vagas salvas, sem baixar nada")
     sub.add_parser("traduzir", help="traduz para português as vagas que ainda não têm tradução")
-    a = ap.parse_args()
+    a = ap.parse_args(argv)
+    if a.cmd == "coletar" and (a.max < 0 or a.pausa < 0):
+        ap.error("--max e --pausa não podem ser negativos")
 
     if a.cmd == "reprocessar":
         vagas = ler()
