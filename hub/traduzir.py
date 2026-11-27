@@ -104,10 +104,10 @@ class Tradutor:
         for r, (_, guardados) in zip(saida, protegidas):
             t = "".join(r.hypotheses[0]).replace("▁", " ").strip()
             for marca, termo in guardados.items():
-                t = re.sub(re.escape(marca), termo, t, flags=re.I)
+                t = re.sub(re.escape(marca), termo, t, flags=re.IGNORECASE)
             out.append(corrigir(t))
         # tradução que "travou" repetindo palavras: melhor deixar o original
-        return [f if re.search(r"\b(\w+)(?:\W+\1\b){2,}", o, re.I) else o for o, f in zip(out, frases)]
+        return [f if re.search(r"\b(\w+)(?:\W+\1\b){2,}", o, re.IGNORECASE) else o for o, f in zip(out, frases)]
 
     def traduzir(self, texto: str) -> str:
         texto = (texto or "").strip()

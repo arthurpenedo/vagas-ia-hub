@@ -54,7 +54,7 @@ def valor_txt(v: dict) -> str:
     if mn is None and mx is None:
         return ""
     moeda = "US$ " if v.get("moeda") == "USD" else (f"{v['moeda']} " if v.get("moeda") else "")
-    n = lambda x: f"{x:,.0f}".replace(",", ".")  # noqa: E731
+    n = lambda x: f"{x:,.0f}".replace(",", ".")
     faixa = n(mx) if mn is None else (f"{n(mn)}–{n(mx)}" if mx and mx != mn else n(mn))
     unid = "/h" if v.get("unidade") == "hora" else (f"/{v['unidade']}" if v.get("unidade") else "")
     return f"{'até ' if mn is None else ''}{moeda}{faixa}{unid}"
