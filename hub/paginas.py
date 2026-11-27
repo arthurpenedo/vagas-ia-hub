@@ -71,7 +71,7 @@ def selo_pais(v: dict) -> str:
 def topo(raiz: str) -> str:
     return f"""<header class="topo"><div class="envolve">
   <a class="logo" href="{raiz}"><span class="logo-marca"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2l2.6 6.4L21 11l-6.4 2.6L12 20l-2.6-6.4L3 11l6.4-2.6z"/></svg></span>Trampo<span>com IA</span></a>
-  <nav class="menu"><a href="{raiz}#vagas">Vagas</a><a href="{raiz}guias/">Guias</a><a href="{raiz}como-funciona.html">Sobre</a><a class="cta" href="{raiz}#novidades">Receber vagas</a></nav>
+  <nav class="menu"><a href="{raiz}#vagas">Vagas</a><a href="{raiz}guias/">Guias</a><a href="{raiz}como-funciona.html">Sobre</a><a class="news-link" href="#novidades" hidden>Receber vagas</a><a class="cta" href="{raiz}#vagas">Ver vagas</a></nav>
 </div></header>"""
 
 
@@ -113,6 +113,8 @@ def cabeca(titulo: str, descricao: str, raiz: str, canonica: str, extra: str = "
 <meta property="og:title" content="{e(titulo)}">
 <meta property="og:description" content="{e(descricao)}">
 <meta property="og:url" content="{e(canonica)}">
+<meta property="og:image" content="https://arthurpenedo.github.io/vagas-ia-hub/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{ICONE}">
 <link rel="stylesheet" href="{raiz}estilo.css">
 {extra}</head>"""

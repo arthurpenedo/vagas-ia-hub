@@ -13,13 +13,34 @@ por um coletor em Python. Feito para quem sente a IA mudando o próprio trabalho
 ## Uso
 
 ```bash
-python -m hub coletar            # atualiza site/vagas.json
+python -m hub coletar            # atualiza site/vagas.json (e traduz)
+python -m hub paginas            # gera as páginas de vaga e o sitemap
 python -m pytest -q              # testes
 python -m http.server -d site    # abre o site em http://localhost:8000
 ```
 
 `rotina.cmd` faz a coleta e envia as vagas ao GitHub (agendado no Windows todo dia às 7h30; roda no PC porque a
 micro1 bloqueia os servidores do GitHub). A cada push, o GitHub Actions roda os testes e publica o site no Pages.
+
+## Páginas geradas na publicação
+
+`python -m hub paginas` (roda no GitHub Actions) cria uma página por vaga em `site/vaga/` (resumo em português,
+texto original, países, botão de candidatura e vagas parecidas), o `sitemap.xml` e o `robots.txt`. Esses arquivos não
+ficam no repositório. O endereço de cada vaga usa o título original + 8 caracteres do id, então não muda entre coletas.
+
+## Newsletter
+
+Caixa "Receba as vagas novas no seu e-mail" na home e em cada vaga. A inscrição vai para um Google Apps Script
+(`apps-script/`) que guarda os e-mails numa planilha privada e faz a dupla confirmação. Depois da coleta, o PC roda
+`python -m hub newsletter`: busca quem confirmou, monta um e-mail com as vagas novas que não são fechadas para o
+Brasil (filtrando pelas áreas que cada pessoa escolheu) e manda um por pessoa pelo Gmail, com link de descadastro.
+Nenhum e-mail de inscrito fica no repositório; `dados/newsletter-estado.json` guarda só os ids já anunciados.
+Para ligar, veja `apps-script/LEIA.md`. Sem isso, a caixa fica escondida.
+
+```bash
+python -m hub newsletter --simular            # mostra o que seria enviado
+python -m hub newsletter --teste voce@x.com   # manda o e-mail de hoje só para você
+```
 
 ## Links de indicação
 

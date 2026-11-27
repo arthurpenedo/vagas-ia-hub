@@ -70,6 +70,7 @@ def main(argv: list[str] | None = None) -> None:
     n = sub.add_parser("newsletter", help="manda as vagas novas para quem confirmou a inscrição")
     n.add_argument("--simular", action="store_true", help="mostra o que seria enviado, sem mandar nada")
     n.add_argument("--teste", metavar="EMAIL", help="manda o e-mail de hoje só para este endereço")
+    n.add_argument("--ligar", nargs=2, metavar=("URL_EXEC", "CHAVE"), help="liga a newsletter: grava o endereço do Apps Script no site e a chave no PC")
     a = ap.parse_args(argv)
     if a.cmd == "coletar" and (a.max < 0 or a.pausa < 0):
         ap.error("--max e --pausa não podem ser negativos")
@@ -95,8 +96,8 @@ def main(argv: list[str] | None = None) -> None:
         print(f"{gerar()} páginas de vaga geradas")
 
     if a.cmd == "newsletter":
-        from .newsletter import rodar
-        print(rodar(simular=a.simular, teste=a.teste))
+        from .newsletter import ligar, rodar
+        print(ligar(*a.ligar) if a.ligar else rodar(simular=a.simular, teste=a.teste))
 
     if a.cmd == "coletar":
         antes = ler()

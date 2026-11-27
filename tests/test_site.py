@@ -81,3 +81,15 @@ def test_rodar_envia_uma_vez_por_dia(tmp_path, monkeypatch):
     assert "já enviada hoje" in newsletter.rodar(enviar=enviadas.append, inscritos=inscritos)
     estado = json.loads((tmp_path / "estado.json").read_text())
     assert estado["anunciadas"] == ["micro1:1", "micro1:2"] and "a@ex.com" not in json.dumps(estado)
+
+
+def test_ligar_valida_e_grava(tmp_path, monkeypatch):
+    monkeypatch.setattr(newsletter, "CONFIG", tmp_path / "cfg.json")
+    monkeypatch.setattr(newsletter, "buscar_inscritos", lambda cfg: [])
+    site_json = tmp_path / "newsletter.json"
+    site_json.write_text('{"endpoint": ""}', encoding="utf-8")
+    assert "precisa ser" in newsletter.ligar("https://exemplo.com/x", "k" * 40, site_json)
+    url = "https://script.google.com/macros/s/ABC/exec"
+    assert "ligada" in newsletter.ligar(url, "k" * 64, site_json)
+    assert json.loads(site_json.read_text())["endpoint"] == url
+    assert json.loads((tmp_path / "cfg.json").read_text())["chave"] == "k" * 64

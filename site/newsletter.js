@@ -19,6 +19,7 @@
     form.querySelector(".news-chips").innerHTML = AREAS.map((a) =>
       `<label class="chip"><input type="checkbox" name="area" value="${a}"> ${a}</label>`).join("");
     caixa.hidden = false;
+    document.querySelectorAll(".news-link").forEach((l) => (l.hidden = false));
 
     form.addEventListener("submit", async (ev) => {
       ev.preventDefault();

@@ -60,6 +60,7 @@ header.topo .envolve { display: flex; align-items: center; gap: 24px; height: 64
 nav.menu { display: flex; gap: 6px; margin-left: auto; align-items: center; }
 nav.menu a { color: var(--suave); text-decoration: none; font-size: .93rem; padding: 7px 12px; border-radius: 10px; transition: color .2s, background .2s; }
 nav.menu a:hover { color: var(--tinta); background: rgba(185, 167, 255, .18); }
+nav.menu a[hidden] { display: none; }
 nav.menu a[aria-current] { color: var(--tinta); font-weight: 600; }
 nav.menu a.cta { color: #fff; background: var(--grad); font-weight: 600; box-shadow: 0 8px 20px -10px rgba(106, 124, 246, .9); }
 nav.menu a.cta:hover { filter: brightness(1.06); background: var(--grad); }

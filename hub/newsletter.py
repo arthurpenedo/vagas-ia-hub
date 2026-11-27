@@ -158,6 +158,26 @@ def login_gmail() -> tuple[str, str]:
     return USUARIO, senha_gmail(USUARIO)
 
 
+def ligar(endpoint: str, chave: str, site_json: Path | None = None) -> str:
+    """Grava o endereço do Apps Script no site (a caixa de inscrição aparece) e o endereço + chave no PC (fora do git)."""
+    if not endpoint.startswith("https://script.google.com/") or not endpoint.rstrip("/").endswith("/exec"):
+        return "newsletter: o endereço precisa ser a URL do app da Web do Apps Script, terminando em /exec"
+    if len(chave) < 32:
+        return "newsletter: a chave parece incompleta (copie a linha 'Chave para o PC' do registro de execução)"
+    CONFIG.parent.mkdir(exist_ok=True)
+    CONFIG.write_text(json.dumps({"endpoint": endpoint, "chave": chave}, indent=1), encoding="utf-8")
+    site_json = site_json or RAIZ / "site" / "newsletter.json"
+    cfg = json.loads(site_json.read_text(encoding="utf-8"))
+    cfg["endpoint"] = endpoint
+    site_json.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+    try:
+        n = len(buscar_inscritos({"endpoint": endpoint, "chave": chave}))
+        teste = f"o Apps Script respondeu ({n} inscritos confirmados)"
+    except Exception as erro:  # noqa: BLE001
+        teste = f"ATENÇÃO, o Apps Script não respondeu: {erro}"
+    return f"newsletter ligada: {teste}. Faça o commit de site/newsletter.json para a caixa aparecer no site."
+
+
 # ---------- rodada ----------
 def rodar(simular: bool = False, teste: str | None = None, enviar=None, inscritos: list[dict] | None = None) -> str:
     cfg = ler_config()

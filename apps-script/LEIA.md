@@ -1,5 +1,9 @@
 # Newsletter: como ligar (uma vez, uns 5 minutos)
 
+> Situação em 27/11/2026: o projeto **Trampo com IA - newsletter** já existe no Apps Script do penedo.arthur@gmail.com,
+> com o código colado e salvo. Falta só a autorização (passo 3) e daí em diante.
+> Se a janela de permissão não abrir, libere pop-ups para script.google.com (ícone na barra de endereço) e clique em Executar de novo.
+
 Tudo grátis, na conta Google de quem cuida do site. Os e-mails dos inscritos ficam numa planilha **privada** dessa conta;
 nada vai para o repositório.
 
@@ -11,13 +15,10 @@ nada vai para o repositório.
 4. Em **Registro de execução** aparecem o link da planilha e a **Chave para o PC**. Copie a chave.
 5. **Implantar → Nova implantação → tipo App da Web**. Executar como: **Eu**. Quem pode acessar: **Qualquer pessoa**. Implantar e
    copie a **URL do app da Web** (termina em `/exec`).
-6. No site, em `site/newsletter.json`, coloque a URL em `endpoint`. Ao publicar, a caixa de inscrição aparece no site.
-7. No PC, crie `dados/newsletter.local.json` (fica fora do git):
-
-   ```json
-   {"endpoint": "https://script.google.com/macros/s/.../exec", "chave": "CHAVE_DO_PASSO_4"}
-   ```
-
+6. No PC, na pasta do projeto: `python -m hub newsletter --ligar URL_DO_PASSO_5 CHAVE_DO_PASSO_4`. Isso grava a URL em
+   `site/newsletter.json` (a caixa de inscrição aparece no site depois do commit) e a URL + chave em
+   `dados/newsletter.local.json` (fica fora do git), e já testa se o Apps Script responde.
+7. Faça o commit e o push de `site/newsletter.json`.
 8. Teste: `python -m hub newsletter --simular` e depois `python -m hub newsletter --teste seu@email.com`.
 
 A rotina diária (`rotina.cmd`) já roda `python -m hub newsletter` depois da coleta. Ela manda um e-mail por dia, só quando
